@@ -23,7 +23,7 @@ namespace asphyxia
         /// <param name="size">Size</param>
         /// <param name="socketFlags">SocketFlags</param>
         /// <param name="socketAddress">SocketAddress</param>
-        /// <returns>Send bytes</returns>
+        /// <returns>Sent bytes</returns>
         public static int SendTo(this Socket socket, byte[] buffer, int offset, int size, SocketFlags socketFlags, SocketAddress socketAddress) => socket.SendTo(new ReadOnlySpan<byte>(buffer, offset, size), socketFlags, socketAddress);
 
         /// <summary>

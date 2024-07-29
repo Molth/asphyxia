@@ -285,7 +285,7 @@ namespace asphyxia
         /// </summary>
         /// <param name="buffer">Buffer</param>
         /// <param name="length">Length</param>
-        /// <returns>Send bytes</returns>
+        /// <returns>Sent bytes</returns>
         internal int SendReliable(byte* buffer, int length)
         {
             _unmanagedBuffer[0] = (byte)Data;
@@ -328,7 +328,7 @@ namespace asphyxia
         ///     Send
         /// </summary>
         /// <param name="packet">DataPacket</param>
-        /// <returns>Send bytes</returns>
+        /// <returns>Sent bytes</returns>
         public int Send(DataPacket packet)
         {
             if (_state != Connected)
