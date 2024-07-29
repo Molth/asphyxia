@@ -7,6 +7,7 @@
 using System;
 using System.Threading;
 #endif
+using asphyxia;
 using static KCP.IKCP;
 
 #pragma warning disable CS8602
@@ -32,7 +33,7 @@ namespace KCP
         /// <summary>
         ///     Output function
         /// </summary>
-        private IKcpCallback _output;
+        private Peer _output;
 
         /// <summary>
         ///     Disposed
@@ -43,7 +44,7 @@ namespace KCP
         ///     Structure
         /// </summary>
         /// <param name="output">Output</param>
-        public Kcp(IKcpCallback output)
+        public Kcp(Peer output)
         {
             _kcp = ikcp_create();
             _output = output;
@@ -247,7 +248,7 @@ namespace KCP
         /// <summary>
         ///     Output function pointer
         /// </summary>
-        public IKcpCallback Output => _output;
+        public Peer Output => _output;
 
         /// <summary>
         ///     Dispose
@@ -266,7 +267,7 @@ namespace KCP
         ///     Set output
         /// </summary>
         /// <param name="output">Output</param>
-        public void SetOutput(IKcpCallback output) => _output = output;
+        public void SetOutput(Peer output) => _output = output;
 
         /// <summary>
         ///     Destructure

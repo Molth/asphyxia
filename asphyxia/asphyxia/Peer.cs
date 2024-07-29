@@ -27,7 +27,7 @@ namespace asphyxia
     /// <summary>
     ///     Peer
     /// </summary>
-    public sealed unsafe class Peer : IKcpCallback
+    public sealed unsafe class Peer
     {
         /// <summary>
         ///     Previous
@@ -219,7 +219,7 @@ namespace asphyxia
         /// </summary>
         /// <param name="length">Length</param>
         /// <param name="current">Timestamp</param>
-        void IKcpCallback.Output(int length, uint current)
+        internal void Output(int length, uint current)
         {
             _managedBuffer[0] = _sessionId;
             _lastSendTimestamp = current;

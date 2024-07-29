@@ -5,6 +5,7 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using asphyxia;
 using static KCP.IQUEUEHEAD;
 using static KCP.KCPBASIC;
 
@@ -129,7 +130,7 @@ namespace KCP
 
         private static void ikcp_segment_delete(IKCPCB* kcp, IKCPSEG* seg) => ikcp_free(seg);
 
-        private static void ikcp_output(IKcpCallback output, int size, uint current)
+        private static void ikcp_output(Peer output, int size, uint current)
         {
             if (size == 0)
                 return;
@@ -766,14 +767,14 @@ namespace KCP
 
         private static int ikcp_wnd_unused(IKCPCB* kcp) => kcp->nrcv_que < kcp->rcv_wnd ? (int)(kcp->rcv_wnd - kcp->nrcv_que) : 0;
 
-        public static void ikcp_flush(IKCPCB* kcp, byte[] buffer, IKcpCallback output)
+        public static void ikcp_flush(IKCPCB* kcp, byte[] buffer, Peer output)
         {
             if (kcp->updated == 0)
                 return;
             ikcp_flush_internal(kcp, buffer, output);
         }
 
-        private static void ikcp_flush_internal(IKCPCB* kcp, byte[] bytes, IKcpCallback output)
+        private static void ikcp_flush_internal(IKCPCB* kcp, byte[] bytes, Peer output)
         {
             var current = kcp->current;
             fixed (byte* buffer = &bytes[REVERSED_HEAD])
@@ -1095,7 +1096,7 @@ namespace KCP
             }
         }
 
-        public static void ikcp_update(IKCPCB* kcp, uint current, byte[] buffer, IKcpCallback output)
+        public static void ikcp_update(IKCPCB* kcp, uint current, byte[] buffer, Peer output)
         {
             kcp->current = current;
             if (kcp->updated == 0)
