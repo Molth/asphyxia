@@ -33,14 +33,19 @@ namespace asphyxia
         public const int KCP_MESSAGE_SIZE = 2048;
 
         /// <summary>
+        ///     Reversed size
+        /// </summary>
+        public const int REVERSED_SIZE = 3;
+
+        /// <summary>
         ///     Kcp flush buffer size
         /// </summary>
-        public const int KCP_FLUSH_BUFFER_SIZE = (int)(REVERSED_HEAD + (KCP_MAXIMUM_TRANSMISSION_UNIT + OVERHEAD) * 3);
+        public const int KCP_FLUSH_BUFFER_SIZE = REVERSED_SIZE + (KCP_MAXIMUM_TRANSMISSION_UNIT + (int)OVERHEAD) * 3;
 
         /// <summary>
         ///     Kcp maximum transmission unit
         /// </summary>
-        public const int KCP_MAXIMUM_TRANSMISSION_UNIT = (int)MTU_DEF - sizeof(PacketFlag) - (int)REVERSED_HEAD - sizeof(Header);
+        public const int KCP_MAXIMUM_TRANSMISSION_UNIT = (int)MTU_DEF - REVERSED_SIZE;
 
         /// <summary>
         ///     Kcp window size
