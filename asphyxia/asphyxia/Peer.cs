@@ -178,7 +178,6 @@ namespace asphyxia
             _kcp.SetMinrto(KCP_RTO_MIN);
             _lastSendTimestamp = current + PEER_PING_INTERVAL;
             _lastReceiveTimestamp = current + PEER_RECEIVE_TIMEOUT;
-            _lastThrottleTimestamp = current + PEER_THROTTLE_INTERVAL;
         }
 
         /// <summary>
@@ -491,6 +490,7 @@ namespace asphyxia
                         if (_state != Connecting)
                             goto error;
                         _state = Connected;
+                        _lastThrottleTimestamp = current + PEER_THROTTLE_INTERVAL;
                         _host.Insert(new NetworkEvent(NetworkEventType.Connect, this));
                         _unmanagedBuffer[0] = (byte)ConnectEstablish;
                         KcpSend(_unmanagedBuffer, 1);
@@ -499,6 +499,7 @@ namespace asphyxia
                         if (_state != ConnectAcknowledging)
                             goto error;
                         _state = Connected;
+                        _lastThrottleTimestamp = current + PEER_THROTTLE_INTERVAL;
                         _host.Insert(new NetworkEvent(NetworkEventType.Connect, this));
                         continue;
                     case (byte)Data:

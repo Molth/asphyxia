@@ -481,6 +481,7 @@ namespace asphyxia
                 _socket.Poll(0, SelectMode.SelectWrite);
             }
         }
+
         /// <summary>
         ///     Remove
         /// </summary>
