@@ -25,7 +25,7 @@ namespace asphyxia
         /// <summary>
         ///     Peer throttle interval
         /// </summary>
-        public const int PEER_THROTTLE_INTERVAL = 500;
+        public const int PEER_THROTTLE_INTERVAL = 100;
 
         /// <summary>
         ///     Peer receive timeout
