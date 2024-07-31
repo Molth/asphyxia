@@ -542,18 +542,18 @@ namespace asphyxia
                 {
                     _lastThrottleTimestamp = current + PEER_THROTTLE_INTERVAL;
                     var rtt = _kcp.RxSrtt;
-                    var totalSentPackets = _kcp.SendNext - _kcp.SendUna;
-                    var loss = totalSentPackets == 0 ? 0f : (float)(totalSentPackets - _kcp.AckCount) / totalSentPackets;
+                    var sent = _kcp.SendNext - _kcp.SendUna;
+                    var loss = sent == 0 ? 0f : (float)(sent - _kcp.AckCount) / sent;
                     var rto = (int)(1.25f * rtt * (1.0f + loss));
+                    var variance = rtt / (100.0f + rtt) + loss;
+                    var interval = (int)(KCP_FLUSH_INTERVAL_MIN * (1.0f + variance));
+                    var windowSize = (int)(KCP_WINDOW_SIZE_MAX * (1.0f - variance));
                     if (rto < KCP_RTO_MIN)
                         rto = KCP_RTO_MIN;
                     else if (rto > KCP_RTO_MAX)
                         rto = KCP_RTO_MAX;
-                    var variance = rtt / (100.0f + rtt) + loss;
-                    var interval = (int)(KCP_FLUSH_INTERVAL_MIN * (1.0f + variance));
                     if (interval > KCP_FLUSH_INTERVAL_MAX)
                         interval = KCP_FLUSH_INTERVAL_MAX;
-                    var windowSize = (int)(KCP_WINDOW_SIZE_MAX * (1.0f - variance));
                     if (windowSize < KCP_WINDOW_SIZE_MIN)
                         windowSize = KCP_WINDOW_SIZE_MIN;
                     _kcp.SetMinrto(rto);
