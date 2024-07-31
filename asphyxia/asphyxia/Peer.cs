@@ -541,8 +541,9 @@ namespace asphyxia
                 if (_lastThrottleTimestamp <= current)
                 {
                     _lastThrottleTimestamp = current + PEER_THROTTLE_INTERVAL;
-                    var rtt = RoundTripTime;
-                    var loss = PacketLoss;
+                    var rtt = _kcp.RxSrtt;
+                    var totalSentPackets = _kcp.SendNext - _kcp.SendUna;
+                    var loss = totalSentPackets == 0 ? 0f : (float)(totalSentPackets - _kcp.AckCount) / totalSentPackets;
                     var rto = (int)(1.25f * rtt * (1.0f + loss));
                     if (rto < KCP_RTO_MIN)
                         rto = KCP_RTO_MIN;
