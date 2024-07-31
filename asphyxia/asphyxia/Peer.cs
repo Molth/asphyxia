@@ -173,7 +173,7 @@ namespace asphyxia
             _state = state;
             _kcp = new Kcp(this);
             _kcp.SetNoDelay(KCP_NO_DELAY, KCP_FLUSH_INTERVAL_MIN, KCP_FAST_RESEND, KCP_NO_CONGESTION_WINDOW);
-            _kcp.SetWindowSize(KCP_WINDOW_SIZE_MIN, KCP_WINDOW_SIZE_MIN);
+            _kcp.SetWindowSize(KCP_WINDOW_SIZE_MIN, (KCP_WINDOW_SIZE_MIN + (KCP_WINDOW_SIZE_MIN << 1)) >> 1);
             _kcp.SetMtu(KCP_MAXIMUM_TRANSMISSION_UNIT);
             _kcp.SetMinrto(KCP_RTO_MIN);
             _lastSendTimestamp = current + PEER_PING_INTERVAL;
@@ -558,7 +558,7 @@ namespace asphyxia
                         windowSize = KCP_WINDOW_SIZE_MIN;
                     _kcp.SetMinrto(rto);
                     _kcp.SetInterval(interval);
-                    _kcp.SetWindowSize(windowSize, windowSize);
+                    _kcp.SetWindowSize(windowSize, (windowSize + (windowSize << 1)) >> 1);
                 }
             }
         }
