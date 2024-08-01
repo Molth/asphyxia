@@ -6,9 +6,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App", "App\App.csproj", "{F
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NatTravel", "NatTravel\NatTravel.csproj", "{28A0EB1F-0DC4-4BA7-9360-E8F2FE114AF1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample", "Sample\Sample.csproj", "{80B2B8B6-CC6C-48E6-88B9-BABC22A9EDBC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samples", "Samples\Samples.csproj", "{80B2B8B6-CC6C-48E6-88B9-BABC22A9EDBC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "asphyxiaNative", "asphyxiaNative\asphyxiaNative.csproj", "{D4A8E9AA-FC64-459B-B81A-6CF86B31AFDC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NatTravelNative", "NatTravelNative\NatTravelNative.csproj", "{FB69F4B7-618F-44B5-BA89-95DB394F5EC6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,5 +38,9 @@ Global
 		{D4A8E9AA-FC64-459B-B81A-6CF86B31AFDC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D4A8E9AA-FC64-459B-B81A-6CF86B31AFDC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4A8E9AA-FC64-459B-B81A-6CF86B31AFDC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB69F4B7-618F-44B5-BA89-95DB394F5EC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB69F4B7-618F-44B5-BA89-95DB394F5EC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB69F4B7-618F-44B5-BA89-95DB394F5EC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB69F4B7-618F-44B5-BA89-95DB394F5EC6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
