@@ -75,7 +75,7 @@ namespace asphyxia
         /// <summary>
         ///     Kcp flush interval max
         /// </summary>
-        public const int KCP_FLUSH_INTERVAL_MAX = 40;
+        public const int KCP_FLUSH_INTERVAL_MAX = 30;
 
         /// <summary>
         ///     Kcp fast resend trigger count
