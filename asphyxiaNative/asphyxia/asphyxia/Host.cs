@@ -290,6 +290,8 @@ namespace asphyxia
                 do
                 {
                     var count = _socket.ReceiveFrom(_unmanagedBuffer, SOCKET_BUFFER_SIZE, ref _remoteEndPoint);
+                    if (count <= 0)
+                        continue;
                     var hashCode = _remoteEndPoint.GetHashCode();
                     try
                     {
