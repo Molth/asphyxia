@@ -121,7 +121,6 @@ namespace asphyxia
             _host = host;
             Id = id;
             IPEndPoint = ipEndPoint;
-
             _hashCode = EndPoint.GetHashCode();
             _sessionId = sessionId;
             _unmanagedBuffer = unmanagedBuffer;
