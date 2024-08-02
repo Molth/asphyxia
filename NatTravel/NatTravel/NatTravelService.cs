@@ -4,8 +4,6 @@
 //------------------------------------------------------------
 
 using System.Collections.Concurrent;
-using System.Net;
-using static System.Runtime.CompilerServices.Unsafe;
 
 namespace asphyxia
 {
@@ -22,7 +20,7 @@ namespace asphyxia
         /// <summary>
         ///     Peers
         /// </summary>
-        private readonly ConcurrentDictionary<IPEndPoint, Peer> _peers = new();
+        private readonly ConcurrentDictionary<int, Peer> _peers = new();
 
         /// <summary>
         ///     Outgoing commands
@@ -112,6 +110,7 @@ namespace asphyxia
         {
             if (Interlocked.CompareExchange(ref _stateLock, 1, 0) != 0)
                 return;
+            var buffer = stackalloc byte[20];
             try
             {
                 while (_networkEvents.TryDequeue(out var networkEvent))
@@ -120,35 +119,19 @@ namespace asphyxia
                     {
                         case NetworkEventType.Connect:
                             Console.WriteLine($"Connected: [{networkEvent.Peer.Id}] [{networkEvent.Peer.IPEndPoint}]");
-                            _peers[networkEvent.Peer.IPEndPoint] = networkEvent.Peer;
+                            _peers[networkEvent.Peer.IPEndPoint.HashCode(buffer)] = networkEvent.Peer;
                             var dataPacket = networkEvent.Peer.IPEndPoint.CreateDataPacket(1);
                             dataPacket.Data[0] = 0;
                             _outgoings.Enqueue(new NetworkOutgoing(networkEvent.Peer, dataPacket));
                             continue;
                         case NetworkEventType.Data:
                             var packet = networkEvent.Packet;
-                            var span = packet.AsSpan();
-                            IPAddress address;
-                            try
-                            {
-                                address = new IPAddress(span[..^4]);
-                            }
-                            catch
-                            {
-                                packet.Dispose();
-                                break;
-                            }
-
-                            var port = ReadUnaligned<int>(ref span[^4]);
-                            var ipEndPoint = new IPEndPoint(address, port);
-                            if (!_peers.TryGetValue(ipEndPoint, out var peer) || networkEvent.Peer == peer)
-                            {
-                                packet.Dispose();
-                                continue;
-                            }
-
-                            Console.WriteLine($"Data: [{networkEvent.Peer.Id}] [{networkEvent.Peer.IPEndPoint}] to [{peer.Id}] [{peer.IPEndPoint}]");
+                            var hashCode = new HashCode();
+                            hashCode.AddBytes(packet.AsSpan());
                             packet.Dispose();
+                            if (!_peers.TryGetValue(hashCode.ToHashCode(), out var peer) || networkEvent.Peer == peer)
+                                continue;
+                            Console.WriteLine($"Data: [{networkEvent.Peer.Id}] [{networkEvent.Peer.IPEndPoint}] to [{peer.Id}] [{peer.IPEndPoint}]");
                             packet = networkEvent.Peer.IPEndPoint.CreateDataPacket(1);
                             packet.Data[0] = 1;
                             var outgoing = new NetworkOutgoing(peer, packet);
@@ -157,7 +140,7 @@ namespace asphyxia
                         case NetworkEventType.Timeout:
                         case NetworkEventType.Disconnect:
                             Console.WriteLine($"Disconnected: [{networkEvent.Peer.Id}] [{networkEvent.Peer.IPEndPoint}]");
-                            _peers.TryRemove(networkEvent.Peer.IPEndPoint, out _);
+                            _peers.TryRemove(networkEvent.Peer.IPEndPoint.HashCode(buffer), out _);
                             continue;
                         case NetworkEventType.None:
                             break;

@@ -5,7 +5,6 @@
 
 using System.Collections.Concurrent;
 using NanoSockets;
-using static System.Runtime.CompilerServices.Unsafe;
 
 namespace asphyxia
 {
@@ -127,28 +126,17 @@ namespace asphyxia
                             continue;
                         case NetworkEventType.Data:
                             var packet = networkEvent.Packet;
-                            var span = packet.AsSpan();
-                            NanoIPAddress address;
-                            try
-                            {
-                                address = new NanoIPAddress(span[..^4]);
-                            }
-                            catch
-                            {
-                                packet.Dispose();
-                                break;
-                            }
-
-                            var port = ReadUnaligned<int>(ref span[^4]);
-                            var ipEndPoint = new NanoIPEndPoint(address, (ushort)port);
-                            if (!_peers.TryGetValue(ipEndPoint, out var peer) || networkEvent.Peer == peer)
+                            if (packet.Length != 18)
                             {
                                 packet.Dispose();
                                 continue;
                             }
 
-                            Console.WriteLine($"Data: [{networkEvent.Peer.Id}] [{networkEvent.Peer.IPEndPoint}] to [{peer.Id}] [{peer.IPEndPoint}]");
+                            var ipEndPoint = new NanoIPEndPoint(packet.AsSpan());
                             packet.Dispose();
+                            if (!_peers.TryGetValue(ipEndPoint, out var peer) || networkEvent.Peer == peer)
+                                continue;
+                            Console.WriteLine($"Data: [{networkEvent.Peer.Id}] [{networkEvent.Peer.IPEndPoint}] to [{peer.Id}] [{peer.IPEndPoint}]");
                             packet = networkEvent.Peer.IPEndPoint.CreateDataPacket(1);
                             packet.Data[0] = 1;
                             var outgoing = new NetworkOutgoing(peer, packet);
