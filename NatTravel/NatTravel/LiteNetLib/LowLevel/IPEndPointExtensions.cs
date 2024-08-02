@@ -8,7 +8,7 @@ using System.Net;
 using System;
 #endif
 
-namespace asphyxia
+namespace LiteNetLib
 {
     /// <summary>
     ///     IPEndPoint extensions
@@ -21,7 +21,7 @@ namespace asphyxia
         /// <param name="ipEndPoint">IPEndPoint</param>
         /// <param name="flag">Flag</param>
         /// <returns>DataPacket</returns>
-        public static DataPacket CreateDataPacket(this IPEndPoint ipEndPoint, PacketFlag flag = PacketFlag.Reliable)
+        public static DataPacket CreateDataPacket(this IPEndPoint ipEndPoint, DeliveryMethod flag = DeliveryMethod.ReliableOrdered)
         {
             var buffer = stackalloc byte[20];
             ipEndPoint.Address.TryWriteBytes(new Span<byte>(buffer, 16), out var bytesWritten);
@@ -36,7 +36,7 @@ namespace asphyxia
         /// <param name="space">Space</param>
         /// <param name="flag">Flag</param>
         /// <returns>DataPacket</returns>
-        public static DataPacket CreateDataPacket(this IPEndPoint ipEndPoint, int space, PacketFlag flag = PacketFlag.Reliable)
+        public static DataPacket CreateDataPacket(this IPEndPoint ipEndPoint, int space, DeliveryMethod flag = DeliveryMethod.ReliableOrdered)
         {
             var buffer = stackalloc byte[space + 20];
             buffer += space;
