@@ -71,12 +71,9 @@ namespace KCP
     internal unsafe struct IKCPSEG
     {
         public IQUEUEHEAD node;
-        public uint cmd;
         public uint frg;
-        public uint wnd;
         public uint ts;
         public uint sn;
-        public uint una;
         public uint len;
         public uint resendts;
         public uint rto;
@@ -131,7 +128,7 @@ namespace KCP
         public const uint INTERVAL = 100;
         public const uint INTERVAL_MIN = 1;
         public const uint INTERVAL_LIMIT = 5000;
-        public const uint OVERHEAD = 20;
+        public const uint OVERHEAD = 14;
         public const uint DEADLINK = 20;
         public const uint THRESH_INIT = 2;
         public const uint THRESH_MIN = 2;
