@@ -653,7 +653,7 @@ namespace KCP
                 {
                     case (byte)CMD_ACK:
                         if (size < 8)
-                            goto label;
+                            return -2;
                         size -= 8;
                         uint ts;
                         data = ikcp_decode32u(data, &ts);
@@ -683,7 +683,7 @@ namespace KCP
                         continue;
                     case (byte)CMD_PUSH:
                         if (size < 9)
-                            goto label;
+                            return -2;
                         size -= 9;
                         byte frg;
                         uint len;
