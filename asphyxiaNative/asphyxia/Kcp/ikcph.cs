@@ -151,6 +151,7 @@ namespace KCP
         public const uint OUT_ACK = 512;
         public const uint OUT_PROBE = 1024;
         public const uint OUT_WINS = 2048;
+        public const uint REVERSED_OVERHEAD = 10;
         public const uint REVERSED_HEAD = 1;
     }
 }

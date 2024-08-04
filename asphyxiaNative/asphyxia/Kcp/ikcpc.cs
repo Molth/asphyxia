@@ -134,7 +134,7 @@ namespace KCP
         {
             if (size == 0)
                 return;
-            size += (int)REVERSED_HEAD + 6;
+            size += (int)REVERSED_HEAD + (int)REVERSED_OVERHEAD;
             output.Output(size, current);
         }
 
@@ -628,13 +628,15 @@ namespace KCP
         public static int ikcp_input(IKCPCB* kcp, byte* data, int size)
         {
             data += (int)REVERSED_HEAD;
-            size -= (int)REVERSED_HEAD + 6;
+            size -= (int)REVERSED_HEAD + (int)REVERSED_OVERHEAD;
             var prev_una = kcp->snd_una;
             uint maxack = 0, latest_ts = 0;
             var flag = 0;
             ushort wnd;
+            uint current;
             uint una;
             data = ikcp_decode16u(data, &wnd);
+            data = ikcp_decode32u(data, &current);
             data = ikcp_decode32u(data, &una);
             kcp->rmt_wnd = wnd;
             ikcp_parse_una(kcp, una);
@@ -643,7 +645,7 @@ namespace KCP
                 if (size < 1)
                     goto label;
                 byte cmd;
-                uint ts, sn;
+                uint sn;
                 data = ikcp_decode8u(data, &cmd);
                 size--;
                 ikcp_shrink_buf(kcp);
@@ -653,6 +655,7 @@ namespace KCP
                         if (size < 8)
                             goto label;
                         size -= 8;
+                        uint ts;
                         data = ikcp_decode32u(data, &ts);
                         data = ikcp_decode32u(data, &sn);
                         if (_itimediff(kcp->current, ts) >= 0)
@@ -679,13 +682,12 @@ namespace KCP
 
                         continue;
                     case (byte)CMD_PUSH:
-                        if (size < 13)
+                        if (size < 9)
                             goto label;
-                        size -= 13;
+                        size -= 9;
                         byte frg;
                         uint len;
                         data = ikcp_decode8u(data, &frg);
-                        data = ikcp_decode32u(data, &ts);
                         data = ikcp_decode32u(data, &sn);
                         data = ikcp_decode32u(data, &len);
                         if (size < len || (int)len < 0)
@@ -693,12 +695,12 @@ namespace KCP
                         size -= (int)len;
                         if (_itimediff(sn, kcp->rcv_nxt + kcp->rcv_wnd) < 0)
                         {
-                            ikcp_ack_push(kcp, sn, ts);
+                            ikcp_ack_push(kcp, sn, current);
                             if (_itimediff(sn, kcp->rcv_nxt) >= 0)
                             {
                                 var seg = ikcp_segment_new(kcp, (int)len);
                                 seg->frg = frg;
-                                seg->ts = ts;
+                                seg->ts = current;
                                 seg->sn = sn;
                                 seg->len = len;
                                 if (len > 0)
@@ -756,7 +758,6 @@ namespace KCP
         {
             ptr = ikcp_encode8u(ptr, (byte)CMD_PUSH);
             ptr = ikcp_encode8u(ptr, (byte)seg->frg);
-            ptr = ikcp_encode32u(ptr, seg->ts);
             ptr = ikcp_encode32u(ptr, seg->sn);
             ptr = ikcp_encode32u(ptr, seg->len);
             return ptr;
@@ -778,6 +779,7 @@ namespace KCP
             var wnd = (uint)ikcp_wnd_unused(kcp);
             var una = kcp->rcv_nxt;
             var buffer = ikcp_encode16u(dest, (ushort)wnd);
+            buffer = ikcp_encode32u(buffer, current);
             buffer = ikcp_encode32u(buffer, una);
             var ptr = buffer;
             int size, i;
@@ -1138,7 +1140,7 @@ namespace KCP
         {
             if (kcp->mtu == (uint)mtu)
                 return 0;
-            if (mtu < OVERHEAD)
+            if (mtu < (int)REVERSED_HEAD + (int)REVERSED_OVERHEAD + (int)OVERHEAD)
                 return -1;
             kcp->mtu = (uint)mtu;
             kcp->mss = kcp->mtu - OVERHEAD;

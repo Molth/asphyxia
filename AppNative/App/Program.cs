@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------
+//------------------------------------------------------------
 // あなたたちを許すことはできません
 // Copyright © 2024 怨靈. All rights reserved.
 //------------------------------------------------------------
@@ -7,7 +7,7 @@ namespace asphyxia
 {
     public sealed class Program
     {
-        private static void Main() => StartNatTravelService();
+        private static void Main() => TestSample.Start();
 
         private static void StartNatTravelService()
         {

@@ -315,7 +315,7 @@ namespace asphyxia
 
                         if ((flags & (int)Reliable) != 0)
                         {
-                            if (count < (int)REVERSED_HEAD + 6)
+                            if (count < (int)REVERSED_HEAD + (int)REVERSED_OVERHEAD)
                             {
                                 if (count == 3 && _unmanagedBuffer[0] == (byte)Header.Disconnect && _unmanagedBuffer[1] == (byte)Header.DisconnectAcknowledge)
                                 {
