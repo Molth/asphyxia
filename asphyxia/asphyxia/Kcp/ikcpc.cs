@@ -709,19 +709,22 @@ namespace KCP
                         }
                         else
                         {
+#if KCP_FASTACK_CONSERVE
+                            if (_itimediff(right_sn, maxack) > 0)
+                            {
+                                maxack = right_sn;
+                                latest_ts = ts;
+                            }
+#else
                             if (_itimediff(left_sn, maxack) > 0)
                             {
-#if KCP_FASTACK_CONSERVE
-                                maxack = left_sn;
-                                latest_ts = ts;
-#else
                                 if (_itimediff(ts, latest_ts) > 0)
                                 {
                                     maxack = left_sn;
                                     latest_ts = ts;
                                 }
-#endif
                             }
+#endif
                         }
 
                         for (sn = left_sn; sn <= right_sn; sn++)
