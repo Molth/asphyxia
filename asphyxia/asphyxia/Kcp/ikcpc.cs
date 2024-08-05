@@ -688,6 +688,7 @@ namespace KCP
 #endif
                             }
                         }
+
                         continue;
                     case (byte)CMD_ACK_RANGE:
                         if (size < 12)
@@ -722,11 +723,13 @@ namespace KCP
 #endif
                             }
                         }
+
                         for (sn = left_sn; sn <= right_sn; sn++)
                         {
                             ikcp_parse_ack(kcp, sn);
                             ikcp_shrink_buf(kcp);
                         }
+
                         continue;
                     case (byte)CMD_PUSH:
                         if (size < 9)
@@ -853,13 +856,6 @@ namespace KCP
                 }
                 else if (count > 1)
                 {
-                    size = (int)(ptr - buffer);
-                    if (size + 9 > (int)kcp->mtu)
-                    {
-                        ikcp_output(output, size, current);
-                        ptr = buffer;
-                    }
-
                     ikcp_ack_get(kcp, 0, &sn, &ts);
                     var left_sn = sn;
                     var right_sn = sn;
@@ -875,6 +871,7 @@ namespace KCP
                         {
                             if (left_sn == right_sn)
                             {
+                                size = (int)(ptr - buffer);
                                 if (size + 9 > (int)kcp->mtu)
                                 {
                                     ikcp_output(output, size, current);
@@ -887,6 +884,7 @@ namespace KCP
                             }
                             else
                             {
+                                size = (int)(ptr - buffer);
                                 if (size + 13 > (int)kcp->mtu)
                                 {
                                     ikcp_output(output, size, current);
@@ -905,6 +903,7 @@ namespace KCP
                         }
                     }
 
+                    size = (int)(ptr - buffer);
                     if (left_sn == right_sn)
                     {
                         if (size + 9 > (int)kcp->mtu)
