@@ -119,6 +119,7 @@ namespace KCP
         public const uint CMD_ACK = 82;
         public const uint CMD_WASK = 83;
         public const uint CMD_WINS = 84;
+        public const uint CMD_ACK_RANGE = 85;
         public const uint ASK_SEND = 1;
         public const uint ASK_TELL = 2;
         public const uint WND_SND = 32;

@@ -528,8 +528,12 @@ namespace KCP
                     break;
                 if (sn != seg->sn)
                 {
+#if KCP_FASTACK_CONSERVE
+                    seg->fastack++;
+#else
                     if (_itimediff(ts, seg->ts) >= 0)
                         seg->fastack++;
+#endif
                 }
             }
         }
@@ -640,6 +644,7 @@ namespace KCP
             data = ikcp_decode32u(data, &una);
             kcp->rmt_wnd = wnd;
             ikcp_parse_una(kcp, una);
+            ikcp_shrink_buf(kcp);
             while (true)
             {
                 if (size < 1)
@@ -648,7 +653,6 @@ namespace KCP
                 uint sn;
                 data = ikcp_decode8u(data, &cmd);
                 size--;
-                ikcp_shrink_buf(kcp);
                 switch (cmd)
                 {
                     case (byte)CMD_ACK:
@@ -672,14 +676,57 @@ namespace KCP
                         {
                             if (_itimediff(sn, maxack) > 0)
                             {
+#if KCP_FASTACK_CONSERVE
+                                maxack = sn;
+                                latest_ts = ts;
+#else
                                 if (_itimediff(ts, latest_ts) > 0)
                                 {
                                     maxack = sn;
                                     latest_ts = ts;
                                 }
+#endif
                             }
                         }
-
+                        continue;
+                    case (byte)CMD_ACK_RANGE:
+                        if (size < 12)
+                            return -2;
+                        size -= 12;
+                        uint left_sn;
+                        uint right_sn;
+                        data = ikcp_decode32u(data, &ts);
+                        data = ikcp_decode32u(data, &left_sn);
+                        data = ikcp_decode32u(data, &right_sn);
+                        if (_itimediff(kcp->current, ts) >= 0)
+                            ikcp_update_ack(kcp, _itimediff(kcp->current, ts));
+                        if (flag == 0)
+                        {
+                            flag = 1;
+                            maxack = left_sn;
+                            latest_ts = ts;
+                        }
+                        else
+                        {
+                            if (_itimediff(left_sn, maxack) > 0)
+                            {
+#if KCP_FASTACK_CONSERVE
+                                maxack = left_sn;
+                                latest_ts = ts;
+#else
+                                if (_itimediff(ts, latest_ts) > 0)
+                                {
+                                    maxack = left_sn;
+                                    latest_ts = ts;
+                                }
+#endif
+                            }
+                        }
+                        for (sn = left_sn; sn <= right_sn; sn++)
+                        {
+                            ikcp_parse_ack(kcp, sn);
+                            ikcp_shrink_buf(kcp);
+                        }
                         continue;
                     case (byte)CMD_PUSH:
                         if (size < 9)
@@ -783,12 +830,14 @@ namespace KCP
                 buffer = ikcp_encode32u(buffer, current);
                 buffer = ikcp_encode32u(buffer, una);
                 var ptr = buffer;
-                int size, i;
+                int size;
                 IQUEUEHEAD* p;
                 var change = 0;
                 var lost = 0;
+                uint sn;
+                uint ts;
                 var count = (int)kcp->ackcount;
-                for (i = 0; i < count; ++i)
+                if (count == 1)
                 {
                     size = (int)(ptr - buffer);
                     if (size + 9 > (int)kcp->mtu)
@@ -797,12 +846,90 @@ namespace KCP
                         ptr = buffer;
                     }
 
-                    uint sn;
-                    uint ts;
-                    ikcp_ack_get(kcp, i, &sn, &ts);
+                    ikcp_ack_get(kcp, 0, &sn, &ts);
                     ptr = ikcp_encode8u(ptr, (byte)CMD_ACK);
                     ptr = ikcp_encode32u(ptr, ts);
                     ptr = ikcp_encode32u(ptr, sn);
+                }
+                else if (count > 1)
+                {
+                    size = (int)(ptr - buffer);
+                    if (size + 9 > (int)kcp->mtu)
+                    {
+                        ikcp_output(output, size, current);
+                        ptr = buffer;
+                    }
+
+                    ikcp_ack_get(kcp, 0, &sn, &ts);
+                    var left_sn = sn;
+                    var right_sn = sn;
+                    var last_ts = ts;
+                    for (var i = 1; i < count; i++)
+                    {
+                        ikcp_ack_get(kcp, i, &sn, &ts);
+                        if (ts == last_ts && sn == right_sn + 1)
+                        {
+                            right_sn = sn;
+                        }
+                        else
+                        {
+                            if (left_sn == right_sn)
+                            {
+                                if (size + 9 > (int)kcp->mtu)
+                                {
+                                    ikcp_output(output, size, current);
+                                    ptr = buffer;
+                                }
+
+                                ptr = ikcp_encode8u(ptr, (byte)CMD_ACK);
+                                ptr = ikcp_encode32u(ptr, last_ts);
+                                ptr = ikcp_encode32u(ptr, left_sn);
+                            }
+                            else
+                            {
+                                if (size + 13 > (int)kcp->mtu)
+                                {
+                                    ikcp_output(output, size, current);
+                                    ptr = buffer;
+                                }
+
+                                ptr = ikcp_encode8u(ptr, (byte)CMD_ACK_RANGE);
+                                ptr = ikcp_encode32u(ptr, last_ts);
+                                ptr = ikcp_encode32u(ptr, left_sn);
+                                ptr = ikcp_encode32u(ptr, right_sn);
+                            }
+
+                            last_ts = ts;
+                            left_sn = sn;
+                            right_sn = sn;
+                        }
+                    }
+
+                    if (left_sn == right_sn)
+                    {
+                        if (size + 9 > (int)kcp->mtu)
+                        {
+                            ikcp_output(output, size, current);
+                            ptr = buffer;
+                        }
+
+                        ptr = ikcp_encode8u(ptr, (byte)CMD_ACK);
+                        ptr = ikcp_encode32u(ptr, last_ts);
+                        ptr = ikcp_encode32u(ptr, left_sn);
+                    }
+                    else
+                    {
+                        if (size + 13 > (int)kcp->mtu)
+                        {
+                            ikcp_output(output, size, current);
+                            ptr = buffer;
+                        }
+
+                        ptr = ikcp_encode8u(ptr, (byte)CMD_ACK_RANGE);
+                        ptr = ikcp_encode32u(ptr, last_ts);
+                        ptr = ikcp_encode32u(ptr, left_sn);
+                        ptr = ikcp_encode32u(ptr, right_sn);
+                    }
                 }
 
                 kcp->ackcount = 0;
