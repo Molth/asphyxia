@@ -383,11 +383,11 @@ namespace asphyxia
                         {
                             if (count < (int)REVERSED_HEAD + (int)REVERSED_OVERHEAD)
                             {
-                                if (count == 3 && _unmanagedBuffer[0] == (byte)Header.Disconnect && _unmanagedBuffer[1] == (byte)Header.DisconnectAcknowledge)
+                                if (count == 3 && _managedBuffer[0] == (byte)Header.Disconnect && _managedBuffer[1] == (byte)Header.DisconnectAcknowledge)
                                 {
                                     if ((_peer == null || hashCode != remoteEndPoint) && !_peers.TryGetValue(hashCode, out _peer))
                                         continue;
-                                    _peer.TryDisconnectNow(_unmanagedBuffer[2]);
+                                    _peer.TryDisconnectNow(_managedBuffer[2]);
                                     continue;
                                 }
                             }
