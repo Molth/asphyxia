@@ -575,42 +575,31 @@ namespace KCP
                 ts[0] = kcp->acklist[p * 2 + 1];
         }
 
-        private static void ikcp_parse_data(IKCPCB* kcp, IKCPSEG* newseg)
+        private static void ikcp_parse_data(IKCPCB* kcp, byte* frg, uint* ts, uint* sn, uint* len, byte* data)
         {
-            var sn = newseg->sn;
-            if (_itimediff(sn, kcp->rcv_nxt + kcp->rcv_wnd) >= 0 || _itimediff(sn, kcp->rcv_nxt) < 0)
-            {
-                ikcp_segment_delete(kcp, newseg);
+            if (_itimediff(*sn, kcp->rcv_nxt + kcp->rcv_wnd) >= 0 || _itimediff(*sn, kcp->rcv_nxt) < 0)
                 return;
-            }
-
             IQUEUEHEAD* p, prev;
-            var repeat = 0;
             for (p = kcp->rcv_buf.prev; p != &kcp->rcv_buf; p = prev)
             {
                 var seg = iqueue_entry(p);
                 prev = p->prev;
-                if (seg->sn == sn)
-                {
-                    repeat = 1;
-                    break;
-                }
-
-                if (_itimediff(sn, seg->sn) > 0)
+                if (seg->sn == *sn)
+                    return;
+                if (_itimediff(*sn, seg->sn) > 0)
                     break;
             }
 
-            if (repeat == 0)
-            {
-                iqueue_init(&newseg->node);
-                iqueue_add(&newseg->node, p);
-                kcp->nrcv_buf++;
-            }
-            else
-            {
-                ikcp_segment_delete(kcp, newseg);
-            }
-
+            var newseg = ikcp_segment_new(kcp, (int)*len);
+            newseg->frg = *frg;
+            newseg->ts = *ts;
+            newseg->sn = *sn;
+            newseg->len = *len;
+            if (*len > 0)
+                memcpy(newseg->data, data, *len);
+            iqueue_init(&newseg->node);
+            iqueue_add(&newseg->node, p);
+            kcp->nrcv_buf++;
             while (!iqueue_is_empty(&kcp->rcv_buf))
             {
                 var seg = iqueue_entry(kcp->rcv_buf.next);
@@ -637,10 +626,10 @@ namespace KCP
             uint maxack = 0, latest_ts = 0;
             var flag = 0;
             ushort wnd;
-            uint current;
+            uint rmt_ts;
             uint una;
             data = ikcp_decode16u(data, &wnd);
-            data = ikcp_decode32u(data, &current);
+            data = ikcp_decode32u(data, &rmt_ts);
             data = ikcp_decode32u(data, &una);
             kcp->rmt_wnd = wnd;
             ikcp_parse_una(kcp, una);
@@ -748,18 +737,9 @@ namespace KCP
                         size -= (int)len;
                         if (_itimediff(sn, kcp->rcv_nxt + kcp->rcv_wnd) < 0)
                         {
-                            ikcp_ack_push(kcp, sn, current);
+                            ikcp_ack_push(kcp, sn, rmt_ts);
                             if (_itimediff(sn, kcp->rcv_nxt) >= 0)
-                            {
-                                var seg = ikcp_segment_new(kcp, (int)len);
-                                seg->frg = frg;
-                                seg->ts = current;
-                                seg->sn = sn;
-                                seg->len = len;
-                                if (len > 0)
-                                    memcpy(seg->data, data, len);
-                                ikcp_parse_data(kcp, seg);
-                            }
+                                ikcp_parse_data(kcp, &frg, &rmt_ts, &sn, &len, data);
                         }
 
                         data += len;
