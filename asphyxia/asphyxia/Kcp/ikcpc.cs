@@ -825,17 +825,20 @@ namespace KCP
                 var count = (int)kcp->ackcount;
                 if (count == 1)
                 {
-                    size = (int)(ptr - buffer);
-                    if (size + 9 > (int)kcp->mtu)
-                    {
-                        ikcp_output(output, size, current);
-                        ptr = buffer;
-                    }
-
                     ikcp_ack_get(kcp, 0, &sn, &ts);
-                    ptr = ikcp_encode8u(ptr, (byte)CMD_ACK);
-                    ptr = ikcp_encode32u(ptr, ts);
-                    ptr = ikcp_encode32u(ptr, sn);
+                    if (sn > una)
+                    {
+                        size = (int)(ptr - buffer);
+                        if (size + 9 > (int)kcp->mtu)
+                        {
+                            ikcp_output(output, size, current);
+                            ptr = buffer;
+                        }
+
+                        ptr = ikcp_encode8u(ptr, (byte)CMD_ACK);
+                        ptr = ikcp_encode32u(ptr, ts);
+                        ptr = ikcp_encode32u(ptr, sn);
+                    }
                 }
                 else if (count > 1)
                 {
@@ -846,6 +849,8 @@ namespace KCP
                     for (var i = 1; i < count; i++)
                     {
                         ikcp_ack_get(kcp, i, &sn, &ts);
+                        if (sn <= una)
+                            continue;
                         if (ts == last_ts && sn == right_sn + 1)
                         {
                             right_sn = sn;
@@ -867,17 +872,20 @@ namespace KCP
                             }
                             else
                             {
-                                size = (int)(ptr - buffer);
-                                if (size + 13 > (int)kcp->mtu)
+                                if (left_sn > una)
                                 {
-                                    ikcp_output(output, size, current);
-                                    ptr = buffer;
-                                }
+                                    size = (int)(ptr - buffer);
+                                    if (size + 13 > (int)kcp->mtu)
+                                    {
+                                        ikcp_output(output, size, current);
+                                        ptr = buffer;
+                                    }
 
-                                ptr = ikcp_encode8u(ptr, (byte)CMD_ACK_RANGE);
-                                ptr = ikcp_encode32u(ptr, last_ts);
-                                ptr = ikcp_encode32u(ptr, left_sn);
-                                ptr = ikcp_encode32u(ptr, right_sn);
+                                    ptr = ikcp_encode8u(ptr, (byte)CMD_ACK_RANGE);
+                                    ptr = ikcp_encode32u(ptr, last_ts);
+                                    ptr = ikcp_encode32u(ptr, left_sn);
+                                    ptr = ikcp_encode32u(ptr, right_sn);
+                                }
                             }
 
                             last_ts = ts;
@@ -886,31 +894,34 @@ namespace KCP
                         }
                     }
 
-                    size = (int)(ptr - buffer);
-                    if (left_sn == right_sn)
+                    if (left_sn > una)
                     {
-                        if (size + 9 > (int)kcp->mtu)
+                        size = (int)(ptr - buffer);
+                        if (left_sn == right_sn)
                         {
-                            ikcp_output(output, size, current);
-                            ptr = buffer;
-                        }
+                            if (size + 9 > (int)kcp->mtu)
+                            {
+                                ikcp_output(output, size, current);
+                                ptr = buffer;
+                            }
 
-                        ptr = ikcp_encode8u(ptr, (byte)CMD_ACK);
-                        ptr = ikcp_encode32u(ptr, last_ts);
-                        ptr = ikcp_encode32u(ptr, left_sn);
-                    }
-                    else
-                    {
-                        if (size + 13 > (int)kcp->mtu)
+                            ptr = ikcp_encode8u(ptr, (byte)CMD_ACK);
+                            ptr = ikcp_encode32u(ptr, last_ts);
+                            ptr = ikcp_encode32u(ptr, left_sn);
+                        }
+                        else
                         {
-                            ikcp_output(output, size, current);
-                            ptr = buffer;
-                        }
+                            if (size + 13 > (int)kcp->mtu)
+                            {
+                                ikcp_output(output, size, current);
+                                ptr = buffer;
+                            }
 
-                        ptr = ikcp_encode8u(ptr, (byte)CMD_ACK_RANGE);
-                        ptr = ikcp_encode32u(ptr, last_ts);
-                        ptr = ikcp_encode32u(ptr, left_sn);
-                        ptr = ikcp_encode32u(ptr, right_sn);
+                            ptr = ikcp_encode8u(ptr, (byte)CMD_ACK_RANGE);
+                            ptr = ikcp_encode32u(ptr, last_ts);
+                            ptr = ikcp_encode32u(ptr, left_sn);
+                            ptr = ikcp_encode32u(ptr, right_sn);
+                        }
                     }
                 }
 
