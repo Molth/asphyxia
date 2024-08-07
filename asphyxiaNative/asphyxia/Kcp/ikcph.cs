@@ -132,7 +132,7 @@ namespace KCP
         public const uint INTERVAL = 100;
         public const uint INTERVAL_MIN = 1;
         public const uint INTERVAL_LIMIT = 5000;
-        public const uint OVERHEAD = 10;
+        public const uint OVERHEAD = 8;
         public const uint DEADLINK = 20;
         public const uint THRESH_INIT = 2;
         public const uint THRESH_MIN = 2;

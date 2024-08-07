@@ -394,7 +394,7 @@ namespace asphyxia
 
                             if ((_peer == null || hashCode != remoteEndPoint) && !_peers.TryGetValue(hashCode, out _peer))
                             {
-                                if (count != 21 || _managedBuffer[20] != (byte)Header.Connect || _peers.Count >= _maxPeers)
+                                if (count != 19 || _managedBuffer[18] != (byte)Header.Connect || _peers.Count >= _maxPeers)
                                     continue;
 #if NET8_0_OR_GREATER
                                 var ipEndPoint = _remoteEndPoint.CreateIPEndPoint();

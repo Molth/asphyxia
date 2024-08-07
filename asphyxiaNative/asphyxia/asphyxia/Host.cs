@@ -328,7 +328,7 @@ namespace asphyxia
 
                             if ((_peer == null || hashCode != remoteEndPoint) && !_peers.TryGetValue(hashCode, out _peer))
                             {
-                                if (count != 21 || _unmanagedBuffer[20] != (byte)Header.Connect || _peers.Count >= _maxPeers)
+                                if (count != 19 || _unmanagedBuffer[18] != (byte)Header.Connect || _peers.Count >= _maxPeers)
                                     continue;
                                 _peer = new Peer(_unmanagedBuffer[0], this, _idPool.TryDequeue(out var id) ? id : _id++, _remoteEndPoint, _unmanagedBuffer, current);
                                 _peers[hashCode] = _peer;

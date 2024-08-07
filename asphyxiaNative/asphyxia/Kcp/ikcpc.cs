@@ -575,7 +575,7 @@ namespace KCP
                 ts[0] = kcp->acklist[p * 2 + 1];
         }
 
-        private static void ikcp_parse_data(IKCPCB* kcp, byte* frg, uint* ts, uint* sn, uint* len, byte* data)
+        private static void ikcp_parse_data(IKCPCB* kcp, byte* frg, uint* ts, uint* sn, ushort* len, byte* data)
         {
             if (_itimediff(*sn, kcp->rcv_nxt + kcp->rcv_wnd) >= 0 || _itimediff(*sn, kcp->rcv_nxt) < 0)
                 return;
@@ -590,7 +590,7 @@ namespace KCP
                     break;
             }
 
-            var newseg = ikcp_segment_new(kcp, (int)*len);
+            var newseg = ikcp_segment_new(kcp, *len);
             newseg->frg = *frg;
             newseg->ts = *ts;
             newseg->sn = *sn;
@@ -639,7 +639,7 @@ namespace KCP
             {
                 if (size < 1)
                     break;
-                uint len;
+                ushort len;
                 byte cmd, frg;
                 uint ts;
                 uint sn;
@@ -726,15 +726,15 @@ namespace KCP
 
                         continue;
                     case (byte)CMD_PUSH:
-                        if (size < 9)
+                        if (size < 7)
                             return -2;
-                        size -= 9;
+                        size -= 7;
                         data = ikcp_decode8u(data, &frg);
                         data = ikcp_decode32u(data, &sn);
-                        data = ikcp_decode32u(data, &len);
-                        if (size < len || (int)len < 0)
+                        data = ikcp_decode16u(data, &len);
+                        if (size < len || len < 0)
                             return -2;
-                        size -= (int)len;
+                        size -= len;
                         last_sn = sn;
                         if (_itimediff(sn, kcp->rcv_nxt + kcp->rcv_wnd) < 0)
                         {
@@ -746,14 +746,14 @@ namespace KCP
                         data += len;
                         continue;
                     case (byte)CMD_PUSH_NEXT:
-                        if (size < 5)
+                        if (size < 3)
                             return -2;
-                        size -= 5;
+                        size -= 3;
                         data = ikcp_decode8u(data, &frg);
-                        data = ikcp_decode32u(data, &len);
-                        if (size < len || (int)len < 0)
+                        data = ikcp_decode16u(data, &len);
+                        if (size < len || len < 0)
                             return -2;
-                        size -= (int)len;
+                        size -= len;
                         last_sn++;
                         sn = last_sn;
                         if (_itimediff(sn, kcp->rcv_nxt + kcp->rcv_wnd) < 0)
@@ -766,14 +766,14 @@ namespace KCP
                         data += len;
                         continue;
                     case (byte)CMD_PUSH_NONFRG:
-                        if (size < 8)
+                        if (size < 6)
                             return -2;
-                        size -= 8;
+                        size -= 6;
                         data = ikcp_decode32u(data, &sn);
-                        data = ikcp_decode32u(data, &len);
-                        if (size < len || (int)len < 0)
+                        data = ikcp_decode16u(data, &len);
+                        if (size < len || len < 0)
                             return -2;
-                        size -= (int)len;
+                        size -= len;
                         frg = 0;
                         last_sn = sn;
                         if (_itimediff(sn, kcp->rcv_nxt + kcp->rcv_wnd) < 0)
@@ -786,13 +786,13 @@ namespace KCP
                         data += len;
                         continue;
                     case (byte)CMD_PUSH_NONFRG_NEXT:
-                        if (size < 4)
+                        if (size < 2)
                             return -2;
-                        size -= 4;
-                        data = ikcp_decode32u(data, &len);
-                        if (size < len || (int)len < 0)
+                        size -= 2;
+                        data = ikcp_decode16u(data, &len);
+                        if (size < len || len < 0)
                             return -2;
-                        size -= (int)len;
+                        size -= len;
                         frg = 0;
                         last_sn++;
                         sn = last_sn;
@@ -852,7 +852,7 @@ namespace KCP
             ptr = ikcp_encode8u(ptr, (byte)CMD_PUSH);
             ptr = ikcp_encode8u(ptr, (byte)seg->frg);
             ptr = ikcp_encode32u(ptr, seg->sn);
-            ptr = ikcp_encode32u(ptr, seg->len);
+            ptr = ikcp_encode16u(ptr, (ushort)seg->len);
             return ptr;
         }
 
@@ -860,7 +860,7 @@ namespace KCP
         {
             ptr = ikcp_encode8u(ptr, (byte)CMD_PUSH_NEXT);
             ptr = ikcp_encode8u(ptr, (byte)seg->frg);
-            ptr = ikcp_encode32u(ptr, seg->len);
+            ptr = ikcp_encode16u(ptr, (ushort)seg->len);
             return ptr;
         }
 
@@ -868,14 +868,14 @@ namespace KCP
         {
             ptr = ikcp_encode8u(ptr, (byte)CMD_PUSH_NONFRG);
             ptr = ikcp_encode32u(ptr, seg->sn);
-            ptr = ikcp_encode32u(ptr, seg->len);
+            ptr = ikcp_encode16u(ptr, (ushort)seg->len);
             return ptr;
         }
 
         private static byte* ikcp_encode_seg_nonfrg_next(byte* ptr, IKCPSEG* seg)
         {
             ptr = ikcp_encode8u(ptr, (byte)CMD_PUSH_NONFRG_NEXT);
-            ptr = ikcp_encode32u(ptr, seg->len);
+            ptr = ikcp_encode16u(ptr, (ushort)seg->len);
             return ptr;
         }
 
