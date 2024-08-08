@@ -388,8 +388,9 @@ namespace asphyxia
                                     if ((_peer == null || hashCode != remoteEndPoint) && !_peers.TryGetValue(hashCode, out _peer))
                                         continue;
                                     _peer.TryDisconnectNow(_managedBuffer[2]);
-                                    continue;
                                 }
+
+                                continue;
                             }
 
                             if ((_peer == null || hashCode != remoteEndPoint) && !_peers.TryGetValue(hashCode, out _peer))
