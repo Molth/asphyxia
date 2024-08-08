@@ -358,7 +358,7 @@ namespace asphyxia
                         continue;
                     }
 
-                    if (count <= 3)
+                    if (count <= 2)
                         continue;
                     var hashCode = _remoteEndPoint.GetHashCode();
                     try
