@@ -290,7 +290,7 @@ namespace asphyxia
                 do
                 {
                     var count = _socket.ReceiveFrom(_unmanagedBuffer, SOCKET_BUFFER_SIZE, ref _remoteEndPoint);
-                    if (count <= 0)
+                    if (count <= 3)
                         continue;
                     var hashCode = _remoteEndPoint.GetHashCode();
                     try
@@ -299,7 +299,7 @@ namespace asphyxia
                         int flags = _unmanagedBuffer[count];
                         if ((flags & (int)Unreliable) != 0)
                         {
-                            if (count <= 1 || ((_peer == null || hashCode != remoteEndPoint) && !_peers.TryGetValue(hashCode, out _peer)))
+                            if ((_peer == null || hashCode != remoteEndPoint) && !_peers.TryGetValue(hashCode, out _peer))
                                 continue;
                             _peer.ReceiveUnreliable(count);
                             continue;

@@ -358,6 +358,8 @@ namespace asphyxia
                         continue;
                     }
 
+                    if (count <= 3)
+                        continue;
                     var hashCode = _remoteEndPoint.GetHashCode();
                     try
                     {
@@ -365,7 +367,7 @@ namespace asphyxia
                         int flags = _managedBuffer[count];
                         if ((flags & (int)Unreliable) != 0)
                         {
-                            if (count <= 1 || ((_peer == null || hashCode != remoteEndPoint) && !_peers.TryGetValue(hashCode, out _peer)))
+                            if ((_peer == null || hashCode != remoteEndPoint) && !_peers.TryGetValue(hashCode, out _peer))
                                 continue;
                             _peer.ReceiveUnreliable(count);
                             continue;
