@@ -623,26 +623,21 @@ namespace KCP
             data += (int)REVERSED_HEAD;
             size -= (int)REVERSED_HEAD + (int)REVERSED_OVERHEAD;
             var prev_una = kcp->snd_una;
-            uint maxack = 0, latest_ts = 0;
+            uint maxack = 0, latest_ts = 0, last_sn = 0;
             var flag = 0;
             ushort wnd;
-            uint rmt_ts;
-            uint una;
+            uint rmt_ts, una;
             data = ikcp_decode16u(data, &wnd);
             data = ikcp_decode32u(data, &rmt_ts);
             data = ikcp_decode32u(data, &una);
             kcp->rmt_wnd = wnd;
             ikcp_parse_una(kcp, una);
             ikcp_shrink_buf(kcp);
-            uint last_sn = 0;
-            while (true)
+            while (size >= 1)
             {
-                if (size < 1)
-                    break;
+                uint ts, sn;
                 ushort len;
                 byte cmd, frg;
-                uint ts;
-                uint sn;
                 data = ikcp_decode8u(data, &cmd);
                 size--;
                 switch (cmd)
@@ -732,7 +727,7 @@ namespace KCP
                         data = ikcp_decode8u(data, &frg);
                         data = ikcp_decode32u(data, &sn);
                         data = ikcp_decode16u(data, &len);
-                        if (size < len || len < 0)
+                        if (size < len)
                             return -2;
                         size -= len;
                         last_sn = sn;
@@ -751,11 +746,10 @@ namespace KCP
                         size -= 3;
                         data = ikcp_decode8u(data, &frg);
                         data = ikcp_decode16u(data, &len);
-                        if (size < len || len < 0)
+                        if (size < len)
                             return -2;
                         size -= len;
-                        last_sn++;
-                        sn = last_sn;
+                        sn = ++last_sn;
                         if (_itimediff(sn, kcp->rcv_nxt + kcp->rcv_wnd) < 0)
                         {
                             ikcp_ack_push(kcp, sn, rmt_ts);
@@ -771,7 +765,7 @@ namespace KCP
                         size -= 6;
                         data = ikcp_decode32u(data, &sn);
                         data = ikcp_decode16u(data, &len);
-                        if (size < len || len < 0)
+                        if (size < len)
                             return -2;
                         size -= len;
                         frg = 0;
@@ -790,12 +784,11 @@ namespace KCP
                             return -2;
                         size -= 2;
                         data = ikcp_decode16u(data, &len);
-                        if (size < len || len < 0)
+                        if (size < len)
                             return -2;
                         size -= len;
                         frg = 0;
-                        last_sn++;
-                        sn = last_sn;
+                        sn = ++last_sn;
                         if (_itimediff(sn, kcp->rcv_nxt + kcp->rcv_wnd) < 0)
                         {
                             ikcp_ack_push(kcp, sn, rmt_ts);
